@@ -6,6 +6,8 @@ description = "Compute the output dimension of a convolutional layer in convolut
 edition = "2018"
 license = "MIT/Apache-2.0"
 categories = ["command-line-utilities"]
+homepage = "https://github.com/FractalArt/convdim"
+repository = "https://github.com/FractalArt/convdim"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
