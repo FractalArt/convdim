@@ -30,6 +30,14 @@ or similarly using the short versions of the flags:
 24
 ```
 
+## Install
+
+To install the installation and make it available everywhere, run:
+
+```sh
+> cargo install --git https://github.com/FractalArt/convdim
+```
+
 ## Documentation
 
 To generate and open the documentation of the code in the web browser, run:
