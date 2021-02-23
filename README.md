@@ -19,15 +19,15 @@ Once the `Rust` toolchain is setup, the application can be compiled as follows:
 The usage is straightforward:
 
 ```sh
-> ./target/release/convdim --input-dim 28 --filter-size 5 --stride 1 --padding 0
+> ./target/release/convdim --input-dim 28 --filter-size 5 --stride 1 --padding 0 --repeat 1
 24
 ```
 
 or similarly using the short versions of the flags:
 
 ```sh
-> ./target/release/convdim -i 28 -f 5 -s 1 -p 0
-24
+> ./target/release/convdim -i 28 -f 5 -s 1 -p 0 -r 2
+20
 ```
 
 ## Install
