@@ -2,13 +2,13 @@
 
 `ConvDim` is a command-line application written in the [Rust](https://www.rust-lang.org/) programming language that computes the output dimension
 of a convolution layer in a convolutional neural network, given the dimension of its input, the size of the convolution
-filter as well as its stride and padding.
+filter as well as its stride and padding. Multiple consecutive applications of the same filter can also be considered.
 
 ***
 
 ## Building & Usage
 
-`ConvDim` requires the Rust compiler to be available. Instructions on how to install it can be found at on the [Rust website](https://www.rust-lang.org/tools/install).
+`ConvDim` requires the Rust compiler to be available. Instructions on how to install it can be found on the [Rust website](https://www.rust-lang.org/tools/install).
 Once the `Rust` toolchain is setup, the application can be compiled as follows:
 
 ```sh
@@ -32,7 +32,7 @@ or similarly using the short versions of the flags:
 
 ## Install
 
-To install the installation and make it available everywhere, run:
+To install the application and make it available everywhere, run:
 
 ```sh
 > cargo install --git https://github.com/FractalArt/convdim
