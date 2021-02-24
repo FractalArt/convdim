@@ -1,5 +1,7 @@
 # ConvDim
 
+![Build status](https://travis-ci.com/FractalArt/convdim.svg?branch=master)
+
 `ConvDim` is a command-line application written in the [Rust](https://www.rust-lang.org/) programming language that computes the output dimension
 of a convolution layer in a convolutional neural network, given the dimension of its input, the size of the convolution
 filter as well as its stride and padding. Multiple consecutive applications of the same filter can also be considered.
