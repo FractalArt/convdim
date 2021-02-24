@@ -94,7 +94,7 @@ padding = 0
 deconv = true
 
 [[layers]]
-# First deconv layer
+# Second deconv layer
 filter_size = 2
 stride = 2
 padding = 0
