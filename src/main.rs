@@ -123,7 +123,7 @@ fn conv_output_dim(in_dim: u16, filter_size: u16, padding: u16, stride: u16, rep
 /// ## Example
 ///
 /// ```rust
-/// assert_eq!(conv_output_dim(28, 5, 0, 1, 1), 24);
+/// assert_eq!(deconv_output_dim(32, 2, 0, 2, 1), 64);
 /// ```
 fn deconv_output_dim(in_dim: u16, filter_size: u16, padding: u16, stride: u16, repeat: u16) -> u16 {
     if filter_size > in_dim + 2 * padding {
