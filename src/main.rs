@@ -150,7 +150,7 @@ fn deconv_output_dim(in_dim: u16, filter_size: u16, padding: u16, stride: u16, r
 /// This corresponds to computing the output after passing an `in_dim`-dimensional input
 /// through all the specified `layers`.
 fn dim_after_layers(layers: &[Layer], in_dim: u16) -> u16 {
-    layers.into_iter().fold(in_dim, |intermediate_dim, layer| {
+    layers.iter().fold(in_dim, |intermediate_dim, layer| {
         if layer.deconv {
             deconv_output_dim(
                 intermediate_dim,
@@ -193,30 +193,28 @@ fn main() {
         };
 
         println!("{}", dim_after_layers(&layers.layers, opt.in_dim));
+    } else if opt.deconv {
+        println!(
+            "{}",
+            deconv_output_dim(
+                opt.in_dim,
+                opt.filter_size,
+                opt.padding,
+                opt.stride,
+                opt.repeat
+            )
+        );
     } else {
-        if opt.deconv {
-            println!(
-                "{}",
-                deconv_output_dim(
-                    opt.in_dim,
-                    opt.filter_size,
-                    opt.padding,
-                    opt.stride,
-                    opt.repeat
-                )
-            );
-        } else {
-            println!(
-                "{}",
-                conv_output_dim(
-                    opt.in_dim,
-                    opt.filter_size,
-                    opt.padding,
-                    opt.stride,
-                    opt.repeat
-                )
-            );
-        }
+        println!(
+            "{}",
+            conv_output_dim(
+                opt.in_dim,
+                opt.filter_size,
+                opt.padding,
+                opt.stride,
+                opt.repeat
+            )
+        );
     }
 }
 
