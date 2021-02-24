@@ -1,6 +1,6 @@
 [package]
 name = "convdim"
-version = "0.1.0"
+version = "0.2.0"
 authors = ["FractalArt <FractalArt@users.noreply.github.com>"]
 description = "Compute the output dimension of a convolutional layer in convolutional neural networks."
 edition = "2018"
@@ -13,3 +13,6 @@ repository = "https://github.com/FractalArt/convdim"
 
 [dependencies]
 structopt = "0.3"
+toml = "0.5.0"
+serde = { version = "1.0", features = ["derive"] }
+
