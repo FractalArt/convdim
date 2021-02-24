@@ -33,6 +33,72 @@ or similarly using the short versions of the flags:
 By specifying the flag `--deconv` or equivalently and shorter `-d` the layer is considered to be deconvolutional
 instead of convolutional, i.e. the dimension of the output is greater or equal than that of the input.
 
+If the output dimension after a successive application of different layers is requested, the command-line application
+approach becomes cumbersome. In this case one can define the network architecture in a input `toml` file and call the
+application as follows
+
+```sh
+> convdim --input-dim 64 --toml layers.toml
+```
+
+or shorter
+
+```sh
+> convdim -i 64 -t layers.toml
+```
+
+The file *layers.toml* might look as follows
+
+```toml
+# The architecture for a simple convolutional autoencoder.
+
+# --- Encoder ---
+
+[[layers]]
+# First conv layer
+filter_size = 3
+stride = 1
+padding = 1
+deconv = false
+
+[[layers]]
+# First max-pool layer
+filter_size = 2
+stride = 2
+padding = 0
+deconv = false
+
+[[layers]]
+# Second conv layer
+filter_size = 3
+stride = 1
+padding = 1
+deconv = false
+
+[[layers]]
+# Second max-pool layer
+filter_size = 2
+stride = 2
+padding = 0
+deconv = false
+
+# --- Decoder ---
+
+[[layers]]
+# First deconv layer
+filter_size = 2
+stride = 2
+padding = 0
+deconv = true
+
+[[layers]]
+# First deconv layer
+filter_size = 2
+stride = 2
+padding = 0
+deconv = true
+```
+
 ## Install
 
 To install the application and make it available everywhere, run:
