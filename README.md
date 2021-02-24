@@ -30,6 +30,9 @@ or similarly using the short versions of the flags:
 20
 ```
 
+By specifying the flag `--deconv` or equivalently and shorter `-d` the layer is considered to be deconvolutional
+instead of convolutional, i.e. the dimension of the output is greater or equal than that of the input.
+
 ## Install
 
 To install the application and make it available everywhere, run:

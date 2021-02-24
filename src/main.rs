@@ -38,6 +38,10 @@ struct Opt {
     #[structopt(short = "r", long = "repeat", default_value = "1")]
     /// The number of times that the convolution layer is applied.
     repeat: u16,
+
+    #[structopt(short = "d", long = "deconv")]
+    /// Flag that specifies that the layer is deconvolutional.
+    deconv: bool
 }
 
 /// ## Compute the output dimension of a convolutional layer.
@@ -66,12 +70,46 @@ fn conv_output_dim(in_dim: u16, filter_size: u16, padding: u16, stride: u16, rep
     
 }
 
+/// ## Compute the output dimension of a deconvolutional layer.
+///
+/// The dimension of the output (o) of the deconvolutional layer is computed from
+/// its input dimension `in_dim` (n), the size of its filter `filter_size` (f) as well
+/// as the zero-`padding` applied to the input and the `stride` that is used to slide
+/// the filter according to:
+///
+/// o = (n - 1) * s + f - 2*p 
+///
+/// ## Example
+///
+/// ```rust
+/// assert_eq!(conv_output_dim(28, 5, 0, 1, 1), 24);
+/// ```
+fn deconv_output_dim(in_dim: u16, filter_size: u16, padding: u16, stride: u16, repeat: u16) -> u16 {
+    if filter_size > in_dim + 2 * padding {
+        panic!("Filter size ({}) is larger than input ({})!", filter_size, in_dim);
+    }
+    match repeat {
+        0 => in_dim,
+        1 => (in_dim - 1) * stride + filter_size - 2 * padding,
+        n => conv_output_dim( (in_dim - 1) * stride + filter_size - 2 * padding, filter_size, padding, stride, n - 1)
+    }
+    
+}
+
 fn main() {
     let opt = Opt::from_args();
-    println!(
-        "{}",
-        conv_output_dim(opt.in_dim, opt.filter_size, opt.padding, opt.stride, opt.repeat)
-    );
+    if opt.deconv {
+        println!(
+            "{}",
+            deconv_output_dim(opt.in_dim, opt.filter_size, opt.padding, opt.stride, opt.repeat)
+        );
+    } else {
+        println!(
+            "{}",
+            conv_output_dim(opt.in_dim, opt.filter_size, opt.padding, opt.stride, opt.repeat)
+        );
+    }
+    
 }
 
 #[cfg(test)]
@@ -84,5 +122,24 @@ mod tests {
         assert_eq!(conv_output_dim(24, 5, 0, 1, 1), 20);
         assert_eq!(conv_output_dim(28, 5, 0, 1, 2), 20);
         assert_eq!(conv_output_dim(4, 4, 1, 1, 1), 3);
+        assert_eq!(conv_output_dim(64, 2, 0, 2, 1), 32);
+    }
+
+    #[test]
+    fn test_deconv_output_dim() {
+        assert_eq!(deconv_output_dim(32, 2, 0, 2, 1), 64);
+    }
+
+    #[test]
+    fn test_conv_deconv_chain() {
+        let in_dim = 64;
+        let stride = 2;
+        let filter_size = 3;
+        let padding = 1;
+
+        let conv_out = conv_output_dim(in_dim, filter_size, padding, stride, 1);
+        assert_eq!(conv_out, 32);
+        let deconv_out = deconv_output_dim(conv_out, filter_size, padding, stride, 1);
+        assert_eq!(deconv_out, 63);
     }
 }
