@@ -37,7 +37,7 @@ struct Layers {
 #[derive(Debug, StructOpt)]
 /// ## Compute the dimension of the output of a (transposed) convolutional layer.
 ///
-/// It is assumed that the input has squared dimension `in_dim`.
+/// It is assumed that the input has squared dimension `input-dim`.
 /// If this is not the case, the height `h` and width `w` output dimensions
 /// can be computed separately by running the program twice and setting
 /// `--input-dim h` and `--input-dim w`.
@@ -47,7 +47,8 @@ struct Opt {
         short = "t",
         long = "toml",
         parse(from_os_str),
-        conflicts_with("transposed")
+        // Everything except the input dimension is specified in the toml file.
+        conflicts_with_all(&["transposed", "filter-size", "padding", "stride", "repeat"])
     )]
     /// Path to the toml file from which the successive layers and the input dimension shall be read.
     toml: Option<std::path::PathBuf>,
@@ -72,8 +73,8 @@ struct Opt {
     /// The number of times that the convolution layer is applied.
     repeat: u16,
 
-    #[structopt(short = "d", long = "deconv")]
-    /// Flag that specifies that the layer is deconvolutional.
+    #[structopt(short = "d", long = "transposed")]
+    /// Flag that specifies that the layer is a transposed convolutional layer.
     transposed: bool,
 }
 
@@ -123,18 +124,21 @@ fn conv_output_dim(in_dim: u16, filter_size: u16, padding: u16, stride: u16, rep
 /// ## Example
 ///
 /// ```rust
-/// assert_eq!(deconv_output_dim(32, 2, 0, 2, 1), 64);
+/// assert_eq!(transposed_conv_output_dim(32, 2, 0, 2, 1), 64);
 /// ```
-fn transposed_conv_output_dim(in_dim: u16, filter_size: u16, padding: u16, stride: u16, repeat: u16) -> u16 {
-    
+fn transposed_conv_output_dim(
+    in_dim: u16,
+    filter_size: u16,
+    padding: u16,
+    stride: u16,
+    repeat: u16,
+) -> u16 {
     if in_dim == 0 {
         panic!("Input to transposed convolutional layer needs to be strictly positive.");
     }
 
     if (in_dim - 1) * stride + filter_size < 2 * padding {
-        panic!(
-            "Parameters of the transposed convolutional layer lead to a negative output."
-        );
+        panic!("Parameters of the transposed convolutional layer lead to a negative output.");
     }
     match repeat {
         1 => (in_dim - 1) * stride + filter_size - 2 * padding,
@@ -235,12 +239,12 @@ mod tests {
     }
 
     #[test]
-    fn test_deconv_output_dim() {
+    fn test_transposed_conv_output_dim() {
         assert_eq!(transposed_conv_output_dim(32, 2, 0, 2, 1), 64);
     }
 
     #[test]
-    fn test_conv_deconv_chain() {
+    fn test_conv_transposed_conv_chain() {
         let in_dim = 64;
         let stride = 2;
         let filter_size = 3;
@@ -248,8 +252,9 @@ mod tests {
 
         let conv_out = conv_output_dim(in_dim, filter_size, padding, stride, 1);
         assert_eq!(conv_out, 32);
-        let deconv_out = transposed_conv_output_dim(conv_out, filter_size, padding, stride, 1);
-        assert_eq!(deconv_out, 63);
+        let transposed_conv_out =
+            transposed_conv_output_dim(conv_out, filter_size, padding, stride, 1);
+        assert_eq!(transposed_conv_out, 63);
     }
 
     #[test]
