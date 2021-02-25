@@ -1,6 +1,6 @@
 [package]
 name = "convdim"
-version = "0.2.0"
+version = "0.3.0"
 authors = ["FractalArt <FractalArt@users.noreply.github.com>"]
 description = "Compute the output dimension of a convolutional layer in convolutional neural networks."
 edition = "2018"
