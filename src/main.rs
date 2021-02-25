@@ -2,8 +2,8 @@
 //!
 //! The dimension of the output is computed from the dimension of the input entering the layer, the size
 //! of the filter associated to the layer, the stride that is used to slide the filter along
-//! the input, as well as the padding that can potentially be applied to the input before application
-//! of the convolution.
+//! the input, as well as the padding that can potentially be applied to the input before performing
+//! the convolution.
 //!
 //! It is assumed that everything (dimensions of the input and the filter as well as stride step and padding)
 //! is symmetric in the `x` and `y` directions. If this is not the case, the program can be run twice by specifying
@@ -12,17 +12,17 @@ use serde::Deserialize;
 use structopt::StructOpt;
 
 #[derive(Deserialize, Debug)]
-/// ## A (de-)convolutional layer.
+/// ## A (transposed) convolutional layer.
 ///
 /// It is defined by its `filter_size`, the `padding` that is applied to
 /// the input before application of the filter, the `stride` with which the
 /// filter moves across the input tensor as well as the information on whether
-/// the layer is a convolutional or a deconvolutional layer.
+/// the layer is a convolutional or a transposed convolutional layer.
 struct Layer {
     filter_size: u16,
     stride: u16,
     padding: u16,
-    deconv: bool,
+    transposed: bool,
 }
 
 #[derive(Deserialize, Debug)]
@@ -35,7 +35,7 @@ struct Layers {
 }
 
 #[derive(Debug, StructOpt)]
-/// ## Compute the dimension of the output of a convolutional layer.
+/// ## Compute the dimension of the output of a (transposed) convolutional layer.
 ///
 /// It is assumed that the input has squared dimension `in_dim`.
 /// If this is not the case, the height `h` and width `w` output dimensions
@@ -47,7 +47,7 @@ struct Opt {
         short = "t",
         long = "toml",
         parse(from_os_str),
-        conflicts_with("deconv")
+        conflicts_with("transposed")
     )]
     /// Path to the toml file from which the successive layers and the input dimension shall be read.
     toml: Option<std::path::PathBuf>,
@@ -74,7 +74,7 @@ struct Opt {
 
     #[structopt(short = "d", long = "deconv")]
     /// Flag that specifies that the layer is deconvolutional.
-    deconv: bool,
+    transposed: bool,
 }
 
 /// ## Compute the output dimension of a convolutional layer.
@@ -94,7 +94,7 @@ struct Opt {
 fn conv_output_dim(in_dim: u16, filter_size: u16, padding: u16, stride: u16, repeat: u16) -> u16 {
     if filter_size > in_dim + 2 * padding {
         panic!(
-            "Filter size ({}) is larger than input ({})!",
+            "Filter size ({}) is larger than (padded) input ({})!",
             filter_size, in_dim
         );
     }
@@ -111,9 +111,9 @@ fn conv_output_dim(in_dim: u16, filter_size: u16, padding: u16, stride: u16, rep
     }
 }
 
-/// ## Compute the output dimension of a deconvolutional layer.
+/// ## Compute the output dimension of a transposed convolutional layer.
 ///
-/// The dimension of the output (o) of the deconvolutional layer is computed from
+/// The dimension of the output (o) of the transposed convolutional layer is computed from
 /// its input dimension `in_dim` (n), the size of its filter `filter_size` (f) as well
 /// as the zero-`padding` applied to the input and the `stride` that is used to slide
 /// the filter according to:
@@ -125,17 +125,20 @@ fn conv_output_dim(in_dim: u16, filter_size: u16, padding: u16, stride: u16, rep
 /// ```rust
 /// assert_eq!(deconv_output_dim(32, 2, 0, 2, 1), 64);
 /// ```
-fn deconv_output_dim(in_dim: u16, filter_size: u16, padding: u16, stride: u16, repeat: u16) -> u16 {
-    if filter_size > in_dim + 2 * padding {
+fn transposed_conv_output_dim(in_dim: u16, filter_size: u16, padding: u16, stride: u16, repeat: u16) -> u16 {
+    
+    if in_dim == 0 {
+        panic!("Input to transposed convolutional layer needs to be strictly positive.");
+    }
+
+    if (in_dim - 1) * stride + filter_size < 2 * padding {
         panic!(
-            "Filter size ({}) is larger than input ({})!",
-            filter_size, in_dim
+            "Parameters of the transposed convolutional layer lead to a negative output."
         );
     }
     match repeat {
-        0 => in_dim,
         1 => (in_dim - 1) * stride + filter_size - 2 * padding,
-        n => conv_output_dim(
+        n => transposed_conv_output_dim(
             (in_dim - 1) * stride + filter_size - 2 * padding,
             filter_size,
             padding,
@@ -145,14 +148,14 @@ fn deconv_output_dim(in_dim: u16, filter_size: u16, padding: u16, stride: u16, r
     }
 }
 
-/// ## Compute the dimension after a several consecutive (de-)convolutional layers.
+/// ## Compute the dimension after a several consecutive (transposed) convolutional layers.
 ///
 /// This corresponds to computing the output after passing an `in_dim`-dimensional input
 /// through all the specified `layers`.
 fn dim_after_layers(layers: &[Layer], in_dim: u16) -> u16 {
     layers.iter().fold(in_dim, |intermediate_dim, layer| {
-        if layer.deconv {
-            deconv_output_dim(
+        if layer.transposed {
+            transposed_conv_output_dim(
                 intermediate_dim,
                 layer.filter_size,
                 layer.padding,
@@ -193,10 +196,10 @@ fn main() {
         };
 
         println!("{}", dim_after_layers(&layers.layers, opt.in_dim));
-    } else if opt.deconv {
+    } else if opt.transposed {
         println!(
             "{}",
-            deconv_output_dim(
+            transposed_conv_output_dim(
                 opt.in_dim,
                 opt.filter_size,
                 opt.padding,
@@ -233,7 +236,7 @@ mod tests {
 
     #[test]
     fn test_deconv_output_dim() {
-        assert_eq!(deconv_output_dim(32, 2, 0, 2, 1), 64);
+        assert_eq!(transposed_conv_output_dim(32, 2, 0, 2, 1), 64);
     }
 
     #[test]
@@ -245,7 +248,7 @@ mod tests {
 
         let conv_out = conv_output_dim(in_dim, filter_size, padding, stride, 1);
         assert_eq!(conv_out, 32);
-        let deconv_out = deconv_output_dim(conv_out, filter_size, padding, stride, 1);
+        let deconv_out = transposed_conv_output_dim(conv_out, filter_size, padding, stride, 1);
         assert_eq!(deconv_out, 63);
     }
 
@@ -258,38 +261,38 @@ mod tests {
                 filter_size: 3,
                 stride: 1,
                 padding: 1,
-                deconv: false,
+                transposed: false,
             },
             Layer {
                 filter_size: 2,
                 stride: 2,
                 padding: 0,
-                deconv: false,
+                transposed: false,
             },
             Layer {
                 filter_size: 3,
                 stride: 1,
                 padding: 1,
-                deconv: false,
+                transposed: false,
             },
             Layer {
                 filter_size: 2,
                 stride: 2,
                 padding: 0,
-                deconv: false,
+                transposed: false,
             },
             // decoder
             Layer {
                 filter_size: 2,
                 stride: 2,
                 padding: 0,
-                deconv: true,
+                transposed: true,
             },
             Layer {
                 filter_size: 2,
                 stride: 2,
                 padding: 0,
-                deconv: true,
+                transposed: true,
             },
         ];
 
