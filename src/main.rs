@@ -241,6 +241,7 @@ mod tests {
     #[test]
     fn test_transposed_conv_output_dim() {
         assert_eq!(transposed_conv_output_dim(32, 2, 0, 2, 1), 64);
+        assert_eq!(transposed_conv_output_dim(1, 2, 0, 2, 4), 16);
     }
 
     #[test]
