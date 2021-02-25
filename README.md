@@ -4,7 +4,8 @@
 
 `ConvDim` is a command-line application written in the [Rust](https://www.rust-lang.org/) programming language that computes the output dimension
 of a convolution layer in a convolutional neural network, given the dimension of its input, the size of the convolution
-filter as well as its stride and padding. Multiple consecutive applications of the same filter can also be considered.
+filter as well as its stride and padding. Multiple consecutive applications of the same filter can also be considered. The case of a transposed
+convolutional layer is handled as well.
 
 ***
 
@@ -32,7 +33,7 @@ or similarly using the short versions of the flags:
 20
 ```
 
-By specifying the flag `--deconv` or equivalently and shorter `-d` the layer is considered to be deconvolutional
+By specifying the flag `--transposed` or equivalently and shorter `-d` the layer is considered to be transposed convolutional
 instead of convolutional, i.e. the dimension of the output is greater or equal than that of the input.
 
 If the output dimension after a successive application of different layers is requested, the command-line application
@@ -61,44 +62,44 @@ The file *layers.toml* might look as follows
 filter_size = 3
 stride = 1
 padding = 1
-deconv = false
+transposed = false
 
 [[layers]]
 # First max-pool layer
 filter_size = 2
 stride = 2
 padding = 0
-deconv = false
+transposed = false
 
 [[layers]]
 # Second conv layer
 filter_size = 3
 stride = 1
 padding = 1
-deconv = false
+transposed = false
 
 [[layers]]
 # Second max-pool layer
 filter_size = 2
 stride = 2
 padding = 0
-deconv = false
+transposed = false
 
 # --- Decoder ---
 
 [[layers]]
-# First deconv layer
+# First transposed conv layer
 filter_size = 2
 stride = 2
 padding = 0
-deconv = true
+transposed = true
 
 [[layers]]
-# Second deconv layer
+# Second transposed layer
 filter_size = 2
 stride = 2
 padding = 0
-deconv = true
+transposed = true
 ```
 
 ## Install
